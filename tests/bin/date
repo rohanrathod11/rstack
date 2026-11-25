@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -eu
+
+case "$*" in
+  '-u +%Y-%m-%dT%H:%M:%SZ') printf '2026-11-23T12:00:00Z\n' ;;
+  '-u +%u %H:%M') printf '1 12:00\n' ;;
+  *) printf 'Unexpected date arguments %s\n' "$*" >&2; exit 2 ;;
+esac

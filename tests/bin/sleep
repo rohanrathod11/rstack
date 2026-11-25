@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Stop the queue watcher at its first wait.
+exit 75

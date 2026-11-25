@@ -1,0 +1,60 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequests": {
+          "nodes": [
+            {
+              "number": 10,
+              "headRefOid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "isDraft": false,
+              "createdAt": "2026-11-20T10:00:00Z",
+              "updatedAt": "2026-11-23T10:30:00Z",
+              "author": {"login": "author-a"},
+              "commits": {"totalCount": 2}
+            },
+            {
+              "number": 11,
+              "headRefOid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "isDraft": false,
+              "createdAt": "2026-11-20T10:00:00Z",
+              "updatedAt": "2026-11-23T11:30:00Z",
+              "author": {"login": "author-b"},
+              "commits": {"totalCount": 4}
+            }
+          ],
+          "pageInfo": {"hasNextPage": true, "endCursor": "next"}
+        }
+      }
+    }
+  },
+  {
+    "data": {
+      "repository": {
+        "pullRequests": {
+          "nodes": [
+            {
+              "number": 12,
+              "headRefOid": "cccccccccccccccccccccccccccccccccccccccc",
+              "isDraft": true,
+              "createdAt": "2026-11-23T11:40:00Z",
+              "updatedAt": "2026-11-23T11:40:00Z",
+              "author": {"login": "author-a"},
+              "commits": {"totalCount": 1}
+            },
+            {
+              "number": 13,
+              "headRefOid": "dddddddddddddddddddddddddddddddddddddddd",
+              "isDraft": false,
+              "createdAt": "2026-11-23T11:50:00Z",
+              "updatedAt": "2026-11-23T11:50:00Z",
+              "author": {"login": "author-a"},
+              "commits": {"totalCount": 3}
+            }
+          ],
+          "pageInfo": {"hasNextPage": false, "endCursor": "end"}
+        }
+      }
+    }
+  }
+]

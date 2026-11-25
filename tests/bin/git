@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -eu
+
+case "$*" in
+  'rev-parse --show-toplevel') pwd -P ;;
+  "rev-parse --verify --end-of-options main^{commit}") printf '%s\n' "$TEST_BASE" ;;
+  "rev-parse --verify HEAD^{commit}") printf '%s\n' "$TEST_HEAD" ;;
+  "merge-base --is-ancestor $TEST_BASE $TEST_HEAD") ;;
+  'status --porcelain --untracked-files=no') ;;
+  "rev-list --parents $TEST_BASE..$TEST_HEAD") printf '%s %s\n' "$TEST_HEAD" "$TEST_BASE" ;;
+  "diff-tree --quiet $TEST_BASE $TEST_HEAD --") [[ ${TEST_SCENARIO:-} == empty-commit ]] ;;
+  "diff --name-only --no-renames -z $TEST_BASE..$TEST_HEAD --") printf 'src/part.py\0' ;;
+  'ls-files -z --') printf 'spec/test_part.py\0' ;;
+  *) printf 'Unexpected git arguments %s\n' "$*" >&2; exit 2 ;;
+esac

@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -eu
+
+endpoint=repos/owner/repo
+scenario=${TEST_SCENARIO:-}
+intake_fixture=$(dirname -- "$0")/../fixtures/intake.json
+case "$*" in
+  "api $endpoint/pulls/17")
+    head=$TEST_HEAD
+    [[ $scenario != moved-head ]] || head=$TEST_OTHER
+    printf '{"head":{"sha":"%s"},"base":{"ref":"main"},"state":"open","draft":false}\n' "$head"
+    ;;
+  "api $endpoint/commits/main")
+    printf '{"sha":"%s"}\n' "$TEST_BASE"
+    ;;
+  "api $endpoint/compare/$TEST_BASE...$TEST_HEAD")
+    printf '{"status":"ahead"}\n'
+    ;;
+  "api --paginate --slurp $endpoint/actions/runs?head_sha=$TEST_HEAD&per_page=100")
+    conclusion=success
+    [[ $scenario != red-workflow ]] || conclusion=failure
+    printf '[{"workflow_runs":[{"id":101,"workflow_id":1,"run_number":2,"run_attempt":1,"head_sha":"%s","path":".github/workflows/ci.yml","status":"completed","conclusion":"%s"}]}]\n' "$TEST_HEAD" "$conclusion"
+    ;;
+  "api --method GET $endpoint/actions/workflows/deploy.yml/runs -f branch=main -f per_page=1")
+    conclusion=success
+    [[ $scenario != failed-deploy ]] || conclusion=failure
+    printf '{"workflow_runs":[{"id":102,"run_attempt":1,"head_branch":"main","status":"completed","conclusion":"%s"}]}\n' "$conclusion"
+    ;;
+  "api --method PUT $endpoint/pulls/17/merge -f merge_method=rebase -f sha=$TEST_HEAD")
+    printf '%s\n' "$*" >> "$TEST_MERGE_LOG"
+    printf '{"merged":true,"sha":"%s"}\n' "$TEST_OTHER"
+    ;;
+  'api --paginate --slurp graphql -f owner=owner -f repo=repo -f query='*)
+    case "$scenario" in
+      intake-error)
+        printf '[{"errors":[{"message":"unavailable"}]}]\n'
+        ;;
+      intake-moved)
+        jq '(.[] | .data.repository.pullRequests.nodes[] | select(.number == 12)).headRefOid = env.TEST_BASE' \
+          "$intake_fixture"
+        ;;
+      intake-closed|intake-merged|intake-missed|intake-pending-error)
+        jq '(.[] | .data.repository.pullRequests.nodes) |= map(select(.number != 12))' "$intake_fixture"
+        ;;
+      *) cat -- "$intake_fixture" ;;
+    esac
+    ;;
+  'api -F number=12 graphql -f owner=owner -f repo=repo -f query='*)
+    case "$scenario" in
+      intake-closed|intake-merged)
+        state=CLOSED
+        [[ $scenario != intake-merged ]] || state=MERGED
+        printf '{"data":{"repository":{"pullRequest":{"number":12,"state":"%s"}}}}\n' "$state"
+        ;;
+      intake-missed)
+        jq '.[] | .data.repository.pullRequests.nodes[] | select(.number == 12)
+          | {data: {repository: {pullRequest: (. + {state: "OPEN"})}}}' "$intake_fixture"
+        ;;
+      intake-pending-error) exit 1 ;;
+      *) exit 2 ;;
+    esac
+    ;;
+  *)
+    printf 'Unexpected gh arguments %s\n' "$*" >&2
+    exit 2
+    ;;
+esac
